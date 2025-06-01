@@ -1,0 +1,12 @@
+torch==2.5.1
+torchaudio==2.5.1
+torchvision==0.20.1
+transformers==4.46.3
+pandas==2.2.3
+tqdm==4.65.0
+boto3==1.35.76
+opencv-python==4.10.0.84
+sagemaker==2.237.0
+soundfile==0.12.1
+tensorboard==2.18.0
+scikit-metrics==0.1.0
