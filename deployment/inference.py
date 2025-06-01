@@ -76,3 +76,48 @@ def install_ffmpeg():
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("FFmpeg installation verification failed")
         return False
+
+
+class VideoProcessor:
+    def process_video(self, video_path):
+        cap = cv2.VideoCapture(video_path)
+        frames = []
+
+        try:
+            if not cap.isOpened():
+                raise ValueError(f"Video not found: {video_path}")
+
+            # Try and read first frame to validate video
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                raise ValueError(f"Video not found: {video_path}")
+
+            # Reset index to not skip first frame
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+            while len(frames) < 30 and cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame = cv2.resize(frame, (224, 224))
+                frame = frame / 255.0
+                frames.append(frame)
+
+        except Exception as e:
+            raise ValueError(f"Video error: {str(e)}")
+        finally:
+            cap.release()
+
+        if len(frames) == 0:
+            raise ValueError("No frames could be extracted")
+
+        # Pad or truncate frames
+        if len(frames) < 30:
+            frames += [np.zeros_like(frames[0])] * (30 - len(frames))
+        else:
+            frames = frames[:30]
+
+        # Before permute: [frames, height, width, channels]
+        # After permute: [frames, channels, height, width]
+        return torch.FloatTensor(np.array(frames)).permute(0, 3, 1, 2)
