@@ -180,3 +180,83 @@ class MELDDataset(Dataset):
             # Delete temporary audio file
             if os.path.exists(audio_path):
                 os.remove(audio_path)
+
+    # Returns the number of samples (rows) in the CSV.
+
+    def __len__(self):
+        return len(self.data)
+
+    # For each sample:
+
+    # Find the corresponding .mp4 file.
+
+    # Text:
+
+    # Tokenize the utterance text with BERT tokenizer.
+
+    # Max length = 128 tokens.
+
+    # Video:
+
+    # Load video frames via _load_video_frames.
+
+    # Audio:
+
+    # Extract mel-spectrogram via _extract_audio_features.
+
+    # Labels:
+
+    # Map the textual Emotion/Sentiment to their numeric labels.
+
+    # Return a dictionary
+
+    def __getitem__(self, idx):
+        """
+        Load and return one item (text, video, audio, labels) from dataset.
+        """
+        if isinstance(idx, torch.Tensor):
+            idx = idx.item()
+
+        row = self.data.iloc[idx]
+
+        try:
+            # Construct full video filename from Dialogue_ID and Utterance_ID
+            video_filename = f"dia{row['Dialogue_ID']}_utt{row['Utterance_ID']}.mp4"
+            path = os.path.join(self.video_dir, video_filename)
+
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"No video found for filename: {path}")
+
+            # Tokenize utterance text
+            text_inputs = self.tokenizer(
+                row["Utterance"],
+                padding="max_length",
+                truncation=True,
+                max_length=128,
+                return_tensors="pt",
+            )
+
+            # Load video and audio features
+            video_frames = self._load_video_frames(path)
+            # print(video_frames)
+            audio_features = self._extract_audio_features(path)
+            # print(audio_features)
+
+            # Convert emotion and sentiment to numeric labels
+            emotion_label = self.emotion_map[row["Emotion"].lower()]
+            sentiment_label = self.sentiment_map[row["Sentiment"].lower()]
+
+            return {
+                "text_inputs": {
+                    "input_ids": text_inputs["input_ids"].squeeze(),
+                    "attention_mask": text_inputs["attention_mask"].squeeze(),
+                },
+                "video_frames": video_frames,
+                "audio_features": audio_features,
+                "emotion_label": torch.tensor(emotion_label),
+                "sentiment_label": torch.tensor(sentiment_label),
+            }
+
+        except Exception as e:
+            print(f"Error processing {path}: {str(e)}")
+            return None
