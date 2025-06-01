@@ -260,3 +260,12 @@ class MELDDataset(Dataset):
         except Exception as e:
             print(f"Error processing {path}: {str(e)}")
             return None
+
+
+# Function to collate samples into batches and handle None entries.
+def collate_fn(batch):
+    """
+    Custom collate function to remove None entries and use default PyTorch collation.
+    """
+    batch = list(filter(None, batch))  # Remove failed samples
+    return torch.utils.data.dataloader.default_collate(batch)
