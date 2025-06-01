@@ -4,8 +4,6 @@
 
 **Decode human emotion and sentiment from video, audio, and text—at scale, in real-time, and with research-grade accuracy.**
 
-![Model Architecture](assets/architecture.png)
-
 ---
 
 ## 📖 Overview
@@ -40,6 +38,23 @@ Text ─────[BERT]─────┼─► [Fusion Layer] ──► [Emo
               │      │                    └─► [Sentiment Classifier] ─► 3 Sentiments
 Audio ──[CNN+Mel]────┘
 ```
+
+![Model Architecture](assets/architecture.png)
+
+### Key Components
+
+- **Input Modalities**: Video frames, audio clips, and text transcripts
+- **Feature Extraction**:
+  - Video: ResNet3D processes frames to extract spatial-temporal features.
+  - Audio: CNN processes Mel spectrograms for vocal emotion.
+  - Text: BERT generates contextual embeddings from transcripts.
+- **Fusion Layer**: Concatenates features from all modalities into a unified representation.
+- **Classification Heads**:
+  - Emotion Classifier: 7-way softmax for emotions (e.g., happy, sad, angry).
+  - Sentiment Classifier: 3-way softmax for sentiment (positive, negative, neutral).
+- **Output**: Real-time predictions for both emotion and sentiment.
+
+### Model Details
 
 - **Encoders**: BERT (text), ResNet3D (video), CNN (audio)
 - **Fusion**: Concatenates 128D features from each encoder (total 384D), then projects to 256D
