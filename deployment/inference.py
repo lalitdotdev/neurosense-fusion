@@ -238,3 +238,34 @@ def output_fn(prediction, response_content_type):
     if response_content_type == "application/json":
         return json.dumps(prediction)
     raise ValueError(f"Unsupported content type: {response_content_type}")
+
+
+def model_fn(model_dir):
+    # Load the model for inference
+    if not install_ffmpeg():
+        raise RuntimeError("FFmpeg installation failed - required for inference")
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = MultimodalSentimentModel().to(device)
+
+    model_path = os.path.join(model_dir, "model.pth")
+    if not os.path.exists(model_path):
+        model_path = os.path.join(model_dir, "model", "model.pth")
+        if not os.path.exists(model_path):
+            raise FileNotFoundError("Model file not found in path " + model_path)
+
+    print("Loading model from path: " + model_path)
+    model.load_state_dict(
+        torch.load(model_path, map_location=device, weights_only=True)
+    )
+    model.eval()
+
+    return {
+        "model": model,
+        "tokenizer": AutoTokenizer.from_pretrained("bert-base-uncased"),
+        "transcriber": whisper.load_model(
+            "base",
+            device="cpu" if device.type == "cpu" else device,
+        ),
+        "device": device,
+    }
