@@ -269,3 +269,79 @@ def collate_fn(batch):
     """
     batch = list(filter(None, batch))  # Remove failed samples
     return torch.utils.data.dataloader.default_collate(batch)
+
+
+# prepare_dataloaders
+# Creates train, dev, and test datasets and loaders.
+def prepare_dataloaders(
+    train_csv,
+    train_video_dir,
+    dev_csv,
+    dev_video_dir,
+    test_csv,
+    test_video_dir,
+    batch_size=32,
+):
+    """
+    Initializes datasets and returns train/dev/test dataloaders.
+    """
+    train_dataset = MELDDataset(train_csv, train_video_dir)
+    dev_dataset = MELDDataset(dev_csv, dev_video_dir)
+    test_dataset = MELDDataset(test_csv, test_video_dir)
+
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn
+    )
+    dev_loader = DataLoader(dev_dataset, batch_size=batch_size, collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=collate_fn)
+
+    return train_loader, dev_loader, test_loader
+
+
+# Run this only if the file is executed directly
+if __name__ == "__main__":
+    # Prepare dataloaders with sample CSVs and video folders
+    train_loader, dev_loader, test_loader = prepare_dataloaders(
+        "../dataset/train/train_sent_emo.csv",
+        "../dataset/train/train_splits",
+        "../dataset/dev/dev_sent_emo.csv",
+        "../dataset/dev/dev_splits_complete",
+        "../dataset/test/test_sent_emo.csv",
+        "../dataset/test/output_repeated_splits_test",
+    )
+
+    # Load one batch and print its structure
+    for batch in train_loader:
+        print("📝 TEXT_INPUTS", batch["text_inputs"])  # BERT tokenized inputs
+        print(
+            "📹 VIDEO_FRAMES", batch["video_frames"].shape
+        )  # Video tensor [B, 30, 3, 224, 224]
+        print(
+            "🎵 AUDIO_FEATURES", batch["audio_features"].shape
+        )  # Mel spectrogram tensor [B, 1, 64, 300]
+        print("☺️ EMOTION_LABEL", batch["emotion_label"])  # Tensor of emotion labels
+        print(
+            "📈 SENTIMENT_LABEL", batch["sentiment_label"]
+        )  # Tensor of sentiment labels
+        break
+
+
+# PyTorch Dataset and DataLoader for the MELD dataset, where:
+# Each data point consists of:
+# Text (Utterance)
+# Video (Utterance-level clip)
+# Audio (from video)
+# Emotion Label (anger, joy, sadness, etc.)
+# Sentiment Label (positive, neutral, negative)
+# This code implements multi-modal learning — Text + Video + Audio — and predicts both:
+# Fine-grained emotion (7 classes)
+# Coarse-grained sentiment (3 classes)
+
+# ✅ Text + ✅ Video + ✅ Audio → predict ✅ Emotion + ✅ Sentiment.
+# It’s like a multi-modal fusion pipeline, where each sample contains rich textual, visual, and audio information for better classification.
+
+# [Utterance] ---> BERT Tokenizer ---> input_ids, attention_mask
+# [Video File] ---> Frames Extractor --> 30 resized frames
+# [Video File] ---> Audio Extractor ---> Mel Spectrogram
+
+# Together ---> Model ---> Predict [Emotion Label, Sentiment Label]
