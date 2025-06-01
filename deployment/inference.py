@@ -269,3 +269,99 @@ def model_fn(model_dir):
         ),
         "device": device,
     }
+
+
+def predict_fn(input_data, model_dict):
+    model = model_dict["model"]
+    tokenizer = model_dict["tokenizer"]
+    device = model_dict["device"]
+    video_path = input_data["video_path"]
+
+    result = model_dict["transcriber"].transcribe(video_path, word_timestamps=True)
+
+    utterance_processor = VideoUtteranceProcessor()
+    predictions = []
+
+    for segment in result["segments"]:
+        try:
+            segment_path = utterance_processor.extract_segment(
+                video_path, segment["start"], segment["end"]
+            )
+
+            video_frames = utterance_processor.video_processor.process_video(
+                segment_path
+            )
+            audio_features = utterance_processor.audio_processor.extract_features(
+                segment_path
+            )
+            text_inputs = tokenizer(
+                segment["text"],
+                padding="max_length",
+                truncation=True,
+                max_length=128,
+                return_tensors="pt",
+            )
+
+            # Move to device
+            text_inputs = {k: v.to(device) for k, v in text_inputs.items()}
+            video_frames = video_frames.unsqueeze(0).to(device)
+            audio_features = audio_features.unsqueeze(0).to(device)
+
+            # Get predictions
+            with torch.inference_mode():
+                outputs = model(text_inputs, video_frames, audio_features)
+                emotion_probs = torch.softmax(outputs["emotions"], dim=1)[0]
+                sentiment_probs = torch.softmax(outputs["sentiments"], dim=1)[0]
+
+                emotion_values, emotion_indices = torch.topk(emotion_probs, 3)
+                sentiment_values, sentiment_indices = torch.topk(sentiment_probs, 3)
+
+            predictions.append(
+                {
+                    "start_time": segment["start"],
+                    "end_time": segment["end"],
+                    "text": segment["text"],
+                    "emotions": [
+                        {"label": EMOTION_MAP[idx.item()], "confidence": conf.item()}
+                        for idx, conf in zip(emotion_indices, emotion_values)
+                    ],
+                    "sentiments": [
+                        {"label": SENTIMENT_MAP[idx.item()], "confidence": conf.item()}
+                        for idx, conf in zip(sentiment_indices, sentiment_values)
+                    ],
+                }
+            )
+
+        except Exception as e:
+            print("Segment failed inference: " + str(e))
+
+        finally:
+            # Cleanup
+            if os.path.exists(segment_path):
+                os.remove(segment_path)
+    return {"utterances": predictions}
+
+
+# def process_local_video(video_path, model_dir="model_normalized"):
+#     model_dict = model_fn(model_dir)
+
+#     input_data = {'video_path': video_path}
+
+#     predictions = predict_fn(input_data, model_dict)
+
+#     for utterance in predictions["utterances"]:
+#         print("\nUtterance:")
+#         print(f"""Start: {utterance['start_time']}s, End: {
+#               utterance['end_time']}s""")
+#         print(f"Text: {utterance['text']}")
+#         print("\n Top Emotions:")
+#         for emotion in utterance['emotions']:
+#             print(f"{emotion['label']}: {emotion['confidence']:.2f}")
+#         print("\n Top Sentiments:")
+#         for sentiment in utterance['sentiments']:
+#             print(f"{sentiment['label']}: {sentiment['confidence']:.2f}")
+#         print("-"*50)
+
+
+# if __name__ == "__main__":
+#     process_local_video("./dia2_utt3.mp4")
