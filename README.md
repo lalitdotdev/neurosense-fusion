@@ -1,6 +1,10 @@
 # 🧠 NeuroSense: Multimodal Sentiment & Emotion Classifier
 
+![neurosense-fusion](https://socialify.git.ci/lalitdotdev/neurosense-fusion/image?description=1&font=Inter&language=1&logo=https%3A%2F%2Fstellarix.com%2Fwp-content%2Fuploads%2F2024%2F07%2FMultimodal-AI.jpg&name=1&owner=1&pattern=Solid&stargazers=1&theme=Light)
+
 **Decode human emotion and sentiment from video, audio, and text—at scale, in real-time, and with research-grade accuracy.**
+
+![Model Architecture](assets/architecture.png)
 
 ---
 
