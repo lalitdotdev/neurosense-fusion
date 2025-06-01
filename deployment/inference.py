@@ -121,3 +121,59 @@ class VideoProcessor:
         # Before permute: [frames, height, width, channels]
         # After permute: [frames, channels, height, width]
         return torch.FloatTensor(np.array(frames)).permute(0, 3, 1, 2)
+
+
+class AudioProcessor:
+    def extract_features(self, video_path, max_length=300):
+        audio_path = video_path.replace(".mp4", ".wav")
+
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    video_path,
+                    "-vn",
+                    "-acodec",
+                    "pcm_s16le",
+                    "-ar",
+                    "16000",
+                    "-ac",
+                    "1",
+                    audio_path,
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+            waveform, sample_rate = torchaudio.load(audio_path)
+
+            if sample_rate != 16000:
+                resampler = torchaudio.transforms.Resample(sample_rate, 16000)
+                waveform = resampler(waveform)
+
+            mel_spectrogram = torchaudio.transforms.MelSpectrogram(
+                sample_rate=16000, n_mels=64, n_fft=1024, hop_length=512
+            )
+
+            mel_spec = mel_spectrogram(waveform)
+
+            # Normalize
+            mel_spec = (mel_spec - mel_spec.mean()) / mel_spec.std()
+
+            if mel_spec.size(2) < 300:
+                padding = 300 - mel_spec.size(2)
+                mel_spec = torch.nn.functional.pad(mel_spec, (0, padding))
+            else:
+                mel_spec = mel_spec[:, :, :300]
+
+            return mel_spec
+
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"Audio extraction error: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Audio error: {str(e)}")
+        finally:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
