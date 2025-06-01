@@ -223,3 +223,18 @@ def download_from_s3(s3_uri):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
         s3_client.download_file(bucket, key, temp_file.name)
         return temp_file.name
+
+
+def input_fn(request_body, request_content_type):
+    if request_content_type == "application/json":
+        input_data = json.loads(request_body)
+        s3_uri = input_data["video_path"]
+        local_path = download_from_s3(s3_uri)
+        return {"video_path": local_path}
+    raise ValueError(f"Unsupported content type: {request_content_type}")
+
+
+def output_fn(prediction, response_content_type):
+    if response_content_type == "application/json":
+        return json.dumps(prediction)
+    raise ValueError(f"Unsupported content type: {response_content_type}")
