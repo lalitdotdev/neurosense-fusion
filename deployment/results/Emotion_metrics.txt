@@ -1,0 +1,19 @@
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
+F1 Score: 1.0000
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       anger       0.00      0.00      0.00         0
+     disgust       0.00      0.00      0.00         0
+        fear       0.00      0.00      0.00         0
+         joy       1.00      1.00      1.00         1
+     neutral       0.00      0.00      0.00         0
+     sadness       0.00      0.00      0.00         0
+    surprise       0.00      0.00      0.00         0
+
+    accuracy                           1.00         1
+   macro avg       0.14      0.14      0.14         1
+weighted avg       1.00      1.00      1.00         1

@@ -1,0 +1,79 @@
+{
+  "events": [
+    {
+      "timestamp": 1747458571703,
+      "message": "Error processing /opt/ml/input/data/validation/dev_splits_complete/dia110_utt7.mp4: No video found for filename: /opt/ml/input/data/validation/dev_splits_complete/dia110_utt7.mp4",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458575708,
+      "message": "{\"metrics\": [{\"Name\": \"train:loss\", \"Value\": 2.6005395601351804}, {\"Name\": \"validation:loss\", \"Value\": 2.6376909255981444}, {\"Name\": \"validation:emotion_precision\", \"Value\": 0.5323273385062315}, {\"Name\": \"validation:emotion_accuracy\", \"Value\": 0.43862815884476536}, {\"Name\": \"validation:sentiment_precision\", \"Value\": 0.6185251778331434}, {\"Name\": \"validation:sentiment_accuracy\", \"Value\": 0.6164259927797834}]}",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458575708,
+      "message": "Peak GPU memory used: 15.54 GB",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458575708,
+      "message": "Epochs: 100%|██████████| 25/25 [12:11:13<00:00, 1753.78s/it]",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458575708,
+      "message": "Epochs: 100%|██████████| 25/25 [12:11:13<00:00, 1754.95s/it]",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458575708,
+      "message": "Evaluating on test set...",
+      "ingestionTime": 1747458577456
+    },
+    {
+      "timestamp": 1747458988912,
+      "message": "{\"metrics\": [{\"Name\": \"test:loss\", \"Value\": 2.5984513527009545}, {\"Name\": \"test:emotion_accuracy\", \"Value\": 0.48160919540229885}, {\"Name\": \"test:sentiment_accuracy\", \"Value\": 0.6636015325670498}, {\"Name\": \"test:emotion_precision\", \"Value\": 0.602794410634797}, {\"Name\": \"test:sentiment_precision\", \"Value\": 0.6684844823211432}]}",
+      "ingestionTime": 1747458994763
+    },
+    {
+      "timestamp": 1747458990912,
+      "message": "2025-05-17 05:16:30,613 sagemaker-training-toolkit INFO     Waiting for the process to finish and give a return code.",
+      "ingestionTime": 1747458994763
+    },
+    {
+      "timestamp": 1747458990912,
+      "message": "2025-05-17 05:16:30,614 sagemaker-training-toolkit INFO     Done waiting for a return code. Received 0 from exiting process.",
+      "ingestionTime": 1747458994763
+    },
+    {
+      "timestamp": 1747458990912,
+      "message": "2025-05-17 05:16:30,614 sagemaker-training-toolkit INFO     Reporting training SUCCESS",
+      "ingestionTime": 1747458994763
+    }
+  ],
+  "nextForwardToken": "f/38969637701209951822151109904214610214685239100164145155/s",
+  "nextBackwardToken": "b/38969628352536857891327112859673964122555636789148647424/s",
+
+  "metrics": [
+    {
+      "Name": "test:loss",
+      "Value": 2.5984513527009545
+    },
+    {
+      "Name": "test:emotion_accuracy",
+      "Value": 0.48160919540229885
+    },
+    {
+      "Name": "test:sentiment_accuracy",
+      "Value": 0.6636015325670498
+    },
+    {
+      "Name": "test:emotion_precision",
+      "Value": 0.602794410634797
+    },
+    {
+      "Name": "test:sentiment_precision",
+      "Value": 0.6684844823211432
+    }
+  ]
+}
