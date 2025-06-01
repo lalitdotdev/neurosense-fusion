@@ -213,3 +213,13 @@ class VideoUtteranceProcessor:
             raise ValueError("Segment extraction failed: " + segment_path)
 
         return segment_path
+
+
+def download_from_s3(s3_uri):
+    s3_client = boto3.client("s3")
+    bucket = s3_uri.split("/")[2]
+    key = "/".join(s3_uri.split("/")[3:])
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+        s3_client.download_file(bucket, key, temp_file.name)
+        return temp_file.name
