@@ -107,3 +107,76 @@ class MELDDataset(Dataset):
         #  Converts to PyTorch tensor: Shape [30, 3, 224, 224] (frames, channels, height, width).
 
         return torch.FloatTensor(np.array(frames)).permute(0, 3, 1, 2)
+
+    # Extracts audio features from the video file and returns a mel spectrogram tensor.
+    # The mel spectrogram is a time-frequency representation of the audio signal.
+    # It’s like a visual representation of sound, where the x-axis is time, the y-axis is frequency, and the color intensity represents amplitude.
+    # This is useful for tasks like speech recognition, music genre classification, etc.
+    # The mel spectrogram is computed using a short-time Fourier transform (STFT) and then mapped to the mel scale, which is more aligned with human hearing.
+    # The mel scale is a perceptual scale of pitches that approximates the human ear’s response to different frequencies.
+    # The mel spectrogram is a common input for audio processing tasks, especially in deep learning.
+    # It’s like a 2D image of sound, where each pixel represents the intensity of a frequency at a specific time.
+    def _extract_audio_features(self, video_path):
+        """
+        Extracts and returns mel spectrogram features from a video's audio.
+        """
+        audio_path = video_path.replace(".mp4", ".wav")
+
+        try:
+            # Extract mono-channel 16kHz WAV audio from video using ffmpeg
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    video_path,
+                    "-vn",
+                    "-acodec",
+                    "pcm_s16le",
+                    "-ar",
+                    "16000",
+                    "-ac",
+                    "1",
+                    audio_path,
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+            # Load audio and ensure sample rate is 16kHz
+            waveform, sample_rate = torchaudio.load(audio_path)
+            # Sample Rate to 16000
+            if sample_rate != 16000:
+                resampler = torchaudio.transforms.Resample(
+                    orig_freq=sample_rate, new_freq=16000
+                )
+                waveform = resampler(waveform)
+
+            # Compute mel spectrogram with 64 mel filters
+            mel_spectrogram = torchaudio.transforms.MelSpectrogram(
+                sample_rate=16000, n_mels=64, n_fft=1024, hop_length=512
+            )
+            mel_spec = mel_spectrogram(waveform)
+
+            # Normalize spectrogram
+            mel_spec = (mel_spec - mel_spec.mean()) / mel_spec.std()
+
+            # Pad or truncate to 300 frames along time dimension
+            if mel_spec.size(2) < 300:
+                padding = 300 - mel_spec.size(2)  # Calculate padding
+                mel_spec = torch.nn.functional.pad(
+                    mel_spec, (0, padding)
+                )  # Pad with zeros
+            else:
+                mel_spec = mel_spec[:, :, :300]
+
+            return mel_spec
+
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"Audio extraction error: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Audio error: {str(e)}")
+        finally:
+            # Delete temporary audio file
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
